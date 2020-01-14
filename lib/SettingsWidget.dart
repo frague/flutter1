@@ -36,75 +36,51 @@ class SettingsWidgetState extends State<SettingsWidget> {
             child: Padding(
               padding: EdgeInsets.all(10),
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Image URL',
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Image URL',
 
+                    ),
+                    initialValue: preferences.url,
+                    onChanged: (value) {
+                      preferences.url = value;
+                      preferences.save();
+                    },
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Refresh interval (min.)',
+                    ),
+                    initialValue: preferences.refreshMinutes.toString(),
+                    onChanged: (value) {
+                      preferences.refreshMinutes = int.parse(value) ?? 60;
+                      preferences.save();
+                    },
+                    keyboardType: TextInputType.number,
+                  ),
+                  Center(
+                    child: Card(
+                      child: Opacity(
+                        opacity: isLoading ? 0.5 : 1,
+                        child: image,
                       ),
-                      initialValue: preferences.url,
-                      onChanged: (value) {
-                        preferences.url = value;
-                        preferences.save();
-                      },
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Refresh interval (min.)',
-                      ),
-                      initialValue: preferences.refreshMinutes.toString(),
-                      onChanged: (value) {
-                        preferences.refreshMinutes = int.parse(value) ?? 60;
-                        preferences.save();
-                      },
-                      keyboardType: TextInputType.number,
-                    ),
-                    Center(
-                        child: isLoading ?
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20.0),
-                          child: CircularProgressIndicator(),
-                        ):
-                        Card(
-                          child: image,
-                          color: Colors.blueGrey,
-                        )
-                    ),
-                    MaterialButton(
-                      child: Text('Fetch'),
-                      color: Colors.amber,
-                      onPressed: isLoading ?
-                      null:
-                          () {
-                        var fs = FileSaver();
-                        var now = DateTime.now();
-                        setState(() {
-                          isLoading = true;
-                        });
-                        fs.fetch(preferences.url).then((File file) {
-                          setState(() {
-                            image = Image.file(
-                                file,
-                                key: Key('${now.millisecondsSinceEpoch}')
-                            );
-                            preferences.lastUpdated = now;
-                            isLoading = false;
-                          });
-                          preferences.save();
-                        }).catchError((error) {
-                          print('Error fetching/saving an image: $error');
-                          setState(() {
-                            isLoading = false;
-                          });
-                        });
-                      },
-                    ),
-                    Spacer(
-                        flex: 1
-                    ),
-                    Text('Last update: ${preferences.lastUpdated}')
-                  ]
+                      color: Colors.blueGrey,
+                    )
+                  ),
+                  MaterialButton(
+                    child: isLoading ?
+                      CircularProgressIndicator() :
+                      Text('Fetch'),
+                    color: Colors.amber,
+                    onPressed: isLoading ? null : fetchImage
+                  ),
+                  Spacer(
+                      flex: 1
+                  ),
+                  Text('Last update: ${preferences.lastUpdated}')
+                ]
               )
               ,
             )
@@ -132,6 +108,31 @@ class SettingsWidgetState extends State<SettingsWidget> {
         setState(() {
           preferences = prefs;
         });
+      });
+    });
+  }
+
+  void fetchImage() async {
+    var fs = FileSaver();
+    var now = DateTime.now();
+    setState(() {
+      isLoading = true;
+    });
+    fs.fetch(preferences.url).then((File file) {
+      imageCache.clear();
+      setState(() {
+        image = Image.file(
+            file,
+            key: Key('${now.millisecondsSinceEpoch}')
+        );
+        preferences.lastUpdated = now;
+        isLoading = false;
+      });
+      preferences.save();
+    }).catchError((error) {
+      print('Error fetching/saving an image: $error');
+      setState(() {
+        isLoading = false;
       });
     });
   }
