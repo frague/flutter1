@@ -9,10 +9,19 @@ import 'FileSaver.dart';
 
 class ImageCardWidget extends StatefulWidget {
   final String preferencesKey;
-  const ImageCardWidget({Key key, this.preferencesKey}): super(key: key);
+  ImageCardWidgetState _state;
+
+  ImageCardWidget({Key key, this.preferencesKey}): super(key: key);
+
+  fetchImage() {
+    _state.fetchImage();
+  }
 
   @override
-  State<StatefulWidget> createState() => ImageCardWidgetState();
+  State<StatefulWidget> createState() {
+    _state = new ImageCardWidgetState();
+    return _state;
+  }
 }
 
 class ImageCardWidgetState extends State<ImageCardWidget> {
@@ -20,6 +29,7 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
       'images/dummy.png'
   );
   var isLoading = false;
+  var isEditing = false;
   Preferences preferences;
 
   @override
@@ -31,38 +41,12 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
           padding: EdgeInsets.all(10),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Image URL',
+              children: isEditing ? getEditingWidgets() : getViewWidgets(),
+//              <Widget>[
 
-                  ),
-                  initialValue: preferences.url,
-                  onChanged: (value) {
-                    preferences.url = value;
-                    preferences.save();
-                  },
-                ),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Refresh interval (min.)',
-                  ),
-                  initialValue: preferences.refreshMinutes.toString(),
-                  onChanged: (value) {
-                    preferences.refreshMinutes = int.parse(value) ?? 60;
-                    preferences.save();
-                  },
-                  keyboardType: TextInputType.number,
-                ),
-                Center(
-                    child: Card(
-                      child: Opacity(
-                        opacity: isLoading ? 0.5 : 1,
-                        child: image,
-                      ),
-                      color: Colors.blueGrey,
-                    )
-                ),
+//                Center(
+//                    child:
+//                ),
 //                MaterialButton(
 //                    child: isLoading ?
 //                    CircularProgressIndicator() :
@@ -74,15 +58,70 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
 //                    flex: 1
 //                ),
 //                Text('Last update: ${preferences.lastUpdated}')
-              ]
+//              ]
           )
         )
 
     );
   }
 
+  List<Widget> getEditingWidgets() {
+    return <Widget>[
+      TextFormField(
+        decoration: InputDecoration(
+          labelText: 'Image URL',
+        ),
+        initialValue: preferences.url,
+        onChanged: (value) {
+          preferences.url = value;
+          preferences.save();
+        },
+      ),
+      TextFormField(
+        decoration: InputDecoration(
+          labelText: 'Refresh interval (min.)',
+        ),
+        initialValue: preferences.refreshMinutes.toString(),
+        onChanged: (value) {
+          preferences.refreshMinutes = int.parse(value) ?? 60;
+          preferences.save();
+        },
+        keyboardType: TextInputType.number,
+      ),
+      MaterialButton(
+        child: Text('OK'),
+        color: Colors.amber,
+        onPressed: () => setState(() {
+          isEditing = false;
+        })
+      ),
+    ];
+  }
+
+  List<Widget> getViewWidgets() {
+    return <Widget>[
+      Card(
+        borderOnForeground: true,
+        child: InkWell(
+          child: Opacity(
+            opacity: isLoading ? 0.5 : 1,
+            child: image,
+          ),
+          onTap: () => setState(() {
+            isEditing = true;
+          })
+        ),
+        color: Colors.blueGrey,
+      )
+    ];
+  }
+
   @override
   void initState() {
+    setState(() {
+      isEditing = this.isEditing;
+    });
+
     preferences = Preferences(widget.preferencesKey);
     preferences.fetch().then((Preferences prefs) {
       setState(() {
@@ -90,7 +129,7 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
       });
     });
 
-    var fs = FileSaver();
+    var fs = FileSaver(widget.preferencesKey);
     print('Initialization');
     fs.requestPermissions(PermissionGroup.storage).then((st) {
       fs.localFile.then((File file) {
@@ -106,7 +145,7 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
   }
 
   void fetchImage() async {
-    var fs = FileSaver();
+    var fs = FileSaver(widget.preferencesKey);
     var now = DateTime.now();
     setState(() {
       isLoading = true;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'ImageCardWidget.dart';
 
+const images = ['webImage', 'w1', 'w2'];
+
 class SettingsWidget extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => SettingsWidgetState();
@@ -8,6 +10,7 @@ class SettingsWidget extends StatefulWidget {
 
 class SettingsWidgetState extends State<SettingsWidget> {
   var isLoading = false;
+  List<ImageCardWidget> imagesWidgets = [];
 
   @override
   Scaffold build(BuildContext context) {
@@ -18,7 +21,8 @@ class SettingsWidgetState extends State<SettingsWidget> {
         ),
         persistentFooterButtons: [
           FloatingActionButton(
-            onPressed: null,
+            onPressed: refreshImages,
+            backgroundColor: Colors.amber,
             child: Icon(Icons.refresh),
           ),
           FloatingActionButton(
@@ -27,25 +31,23 @@ class SettingsWidgetState extends State<SettingsWidget> {
           )
         ],
         body: ListView(
-          children: ['webImage', 'w1', 'w2'].map((key) {
-            return Container(
-              height: 400.0,
-              child: ImageCardWidget(
-                preferencesKey: key
-              )
-            );
-          }).toList(),
+          children: imagesWidgets,
         )
     );
   }
 
   @override
   initState() {
+    imagesWidgets = images.map((key) => ImageCardWidget(
+      preferencesKey: key
+    )).toList();
+    
     super.initState();
-
-
   }
 
-
+  refreshImages() {
+    print('Fetching all images');
+    imagesWidgets.forEach((widget) => widget.fetchImage());
+  }
 
 }

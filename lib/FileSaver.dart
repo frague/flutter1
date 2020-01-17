@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -8,8 +7,13 @@ const dcim = '/storage/emulated/0/DCIM/Web';
 
 class FileSaver {
   static var httpClient = new HttpClient();
+  String fileName;
 
-  FileSaver() {
+  FileSaver(String id) {
+    if (id.isEmpty) {
+      throw('No file id provided');
+    }
+    fileName = 'image$id';
     _assureDirectory();
   }
 
@@ -22,7 +26,6 @@ class FileSaver {
   // Checks if the target path exists
   // Creates it if it is not
   Future<void> _assureDirectory() async {
-    log('dddd');
     final targetDir = new Directory(await _localPath);
     bool dirExists = await targetDir.exists();
     print('Check if $targetDir exists: $dirExists');
@@ -37,8 +40,8 @@ class FileSaver {
     print('Getting local file:');
     try {
       final path = await _localPath;
-      print('$path/image.jpg');
-      return File('$path/image.jpg');
+      print('$path/$fileName.jpg');
+      return File('$path/$fileName.jpg');
     } catch (e) {
       print('... failed: $e');
       return null;
