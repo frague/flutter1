@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:images_fetcher/utils.dart';
 import 'ImageCardWidget.dart';
 
-const images = ['webImage', 'w1', 'w2'];
+import 'package:images_fetcher/preferences.dart';
 
 class SettingsWidget extends StatefulWidget {
   @override
@@ -11,10 +14,11 @@ class SettingsWidget extends StatefulWidget {
 class SettingsWidgetState extends State<SettingsWidget> {
   var isLoading = false;
   List<ImageCardWidget> imagesWidgets = [];
+  List<String> imagesIds = [];
+  final StreamController ctrl = StreamController.broadcast();
 
   @override
   Scaffold build(BuildContext context) {
-
     return Scaffold(
         appBar: AppBar(
           title: Text('Web Images'),
@@ -26,28 +30,55 @@ class SettingsWidgetState extends State<SettingsWidget> {
             child: Icon(Icons.refresh),
           ),
           FloatingActionButton(
-            onPressed: null,
+            onPressed: pushImage,
             child: Icon(Icons.plus_one),
           )
         ],
         body: ListView(
-          children: imagesWidgets,
+          children: List<ImageCardWidget>.from(
+              imagesIds
+                .where((key) => key.isNotEmpty)
+                .map((key) {
+                  print('Create widget $key');
+                  return ImageCardWidget(
+                      preferencesKey: key,
+                      refreshStream: ctrl,
+                  );
+                })
+          ),
         )
     );
   }
 
   @override
   initState() {
-    imagesWidgets = images.map((key) => ImageCardWidget(
-      preferencesKey: key
-    )).toList();
-    
     super.initState();
+  }
+
+  @override
+  deactivate() {
+    ctrl.close();
+    super.deactivate();
   }
 
   refreshImages() {
     print('Fetching all images');
-    imagesWidgets.forEach((widget) => widget.fetchImage());
+    this.imagesWidgets.forEach((ImageCardWidget widget) {
+      print('Fetch ${widget.preferencesKey}');
+      ctrl.sink.add(true);
+    });
+  }
+
+  pushImage() {
+    final String name = Utils.createRandomString(10);
+    final widget = ImageCardWidget(preferencesKey: name,);
+
+    setState(() {
+      imagesIds.add(name);
+      this.imagesWidgets.add(widget);
+    });
+
+    print('Added ${widget.preferencesKey}');
   }
 
 }

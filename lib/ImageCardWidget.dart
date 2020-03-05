@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,19 +10,13 @@ import 'FileSaver.dart';
 
 class ImageCardWidget extends StatefulWidget {
   final String preferencesKey;
-  ImageCardWidgetState _state;
+  final StreamController refreshStream;
 
-  ImageCardWidget({Key key, this.preferencesKey}): super(key: key);
+  ImageCardWidget({Key key,  this.preferencesKey, this.refreshStream}): super(key: key);
 
-  fetchImage() {
-    _state.fetchImage();
-  }
 
   @override
-  State<StatefulWidget> createState() {
-    _state = new ImageCardWidgetState();
-    return _state;
-  }
+  State<StatefulWidget> createState() => ImageCardWidgetState(this.refreshStream);
 }
 
 class ImageCardWidgetState extends State<ImageCardWidget> {
@@ -31,35 +26,29 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
   var isLoading = false;
   var isEditing = false;
   Preferences preferences;
+  final StreamController refreshStream;
+
+  ImageCardWidgetState(this.refreshStream) : super() {
+    this.refreshStream.stream.listen(this.fetchImage);
+  }
 
   @override
   Widget build(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
     return Form(
         key: _formKey,
-        child: Padding(
-          padding: EdgeInsets.all(10),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: isEditing ? getEditingWidgets() : getViewWidgets(),
-//              <Widget>[
-
-//                Center(
-//                    child:
-//                ),
-//                MaterialButton(
-//                    child: isLoading ?
-//                    CircularProgressIndicator() :
-//                    Text('Fetch'),
-//                    color: Colors.amber,
-//                    onPressed: isLoading ? null : fetchImage
-//                ),
-//                Spacer(
-//                    flex: 1
-//                ),
-//                Text('Last update: ${preferences.lastUpdated}')
-//              ]
-          )
+        child: FlatButton(
+            onPressed: () {
+              isEditing = !isEditing;
+            },
+            child: Padding(
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: isEditing ? getEditingWidgets() : getViewWidgets(),
+                //                Text('Last update: ${preferences.lastUpdated}')
+                ),
+            )
         )
 
     );
@@ -144,7 +133,8 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
     super.initState();
   }
 
-  void fetchImage() async {
+  void fetchImage([flag]) async {
+    print('Fetching for ${preferences.prefix}');
     var fs = FileSaver(widget.preferencesKey);
     var now = DateTime.now();
     setState(() {

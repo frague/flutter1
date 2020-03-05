@@ -39,9 +39,10 @@ class FileSaver {
   Future<File> get localFile async {
     print('Getting local file:');
     try {
-      final path = await _localPath;
-      print('$path/$fileName.jpg');
-      return File('$path/$fileName.jpg');
+      final path = await _localPath + '/$fileName.jpg';
+      print('$path');
+      final file = File('$path');
+      return file;
     } catch (e) {
       print('... failed: $e');
       return null;

@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+const prefsIdsKey = 'allPrefs';
+
 class Preferences {
   String prefix;
   String url = '';
@@ -9,6 +11,11 @@ class Preferences {
 
   Preferences(String prefix) {
     this.prefix = prefix;
+  }
+
+  static Future<List<String>> fetchIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return List.from((prefs.getString(prefsIdsKey) ?? '').split(','));
   }
 
   Future<Preferences> fetch() async {
