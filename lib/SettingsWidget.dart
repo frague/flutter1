@@ -15,7 +15,7 @@ class SettingsWidgetState extends State<SettingsWidget> {
   var isLoading = false;
   List<ImageCardWidget> imagesWidgets = [];
   List<String> imagesIds = [];
-  final StreamController ctrl = StreamController.broadcast();
+  final StreamController refreshBus = StreamController.broadcast();
 
   @override
   Scaffold build(BuildContext context) {
@@ -31,20 +31,21 @@ class SettingsWidgetState extends State<SettingsWidget> {
           ),
           FloatingActionButton(
             onPressed: pushImage,
+            backgroundColor: Colors.teal,
             child: Icon(Icons.plus_one),
           )
         ],
         body: ListView(
           children: List<ImageCardWidget>.from(
-              imagesIds
-                .where((key) => key.isNotEmpty)
-                .map((key) {
+            imagesIds
+              .where((key) => key.isNotEmpty)
+              .map((key) {
                   print('Create widget $key');
                   return ImageCardWidget(
                       preferencesKey: key,
-                      refreshStream: ctrl,
+                      refreshBus: refreshBus,
                   );
-                })
+              })
           ),
         )
     );
@@ -53,31 +54,43 @@ class SettingsWidgetState extends State<SettingsWidget> {
   @override
   initState() {
     super.initState();
+    getImagesIds();
   }
 
   @override
   deactivate() {
-    ctrl.close();
+    refreshBus.close();
     super.deactivate();
   }
 
-  refreshImages() {
-    print('Fetching all images');
-    this.imagesWidgets.forEach((ImageCardWidget widget) {
-      print('Fetch ${widget.preferencesKey}');
-      ctrl.sink.add(true);
+  Future<void> getImagesIds() async {
+    var ids = await Preferences.fetchIds();
+    setState(() {
+      imagesIds = ids;
     });
   }
 
-  pushImage() {
+  void refreshImages() {
+    print('Fetching all images');
+    imagesWidgets.forEach((ImageCardWidget widget) {
+      print('Fetch ${widget.preferencesKey}');
+      refreshBus.sink.add(true);
+    });
+  }
+
+  void pushImage() {
     final String name = Utils.createRandomString(10);
-    final widget = ImageCardWidget(preferencesKey: name,);
+    final widget = ImageCardWidget(
+      preferencesKey: name,
+      refreshBus: refreshBus,
+    );
 
     setState(() {
       imagesIds.add(name);
-      this.imagesWidgets.add(widget);
     });
 
+    imagesWidgets.add(widget);
+    Preferences.saveIds(imagesIds);
     print('Added ${widget.preferencesKey}');
   }
 

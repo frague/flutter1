@@ -8,21 +8,21 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'FileSaver.dart';
 
+const dummyImagePath = 'images/dummy.png';
+
 class ImageCardWidget extends StatefulWidget {
   final String preferencesKey;
-  final StreamController refreshStream;
+  final StreamController refreshBus;
 
-  ImageCardWidget({Key key,  this.preferencesKey, this.refreshStream}): super(key: key);
+  ImageCardWidget({Key key,  this.preferencesKey, this.refreshBus}): super(key: key);
 
 
   @override
-  State<StatefulWidget> createState() => ImageCardWidgetState(this.refreshStream);
+  State<StatefulWidget> createState() => ImageCardWidgetState(this.refreshBus);
 }
 
 class ImageCardWidgetState extends State<ImageCardWidget> {
-  var image = Image.asset(
-      'images/dummy.png'
-  );
+  var image = Image.asset(dummyImagePath);
   var isLoading = false;
   var isEditing = false;
   Preferences preferences;
@@ -42,7 +42,7 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
               isEditing = !isEditing;
             },
             child: Padding(
-                padding: EdgeInsets.all(10),
+                padding: EdgeInsets.only(top: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: isEditing ? getEditingWidgets() : getViewWidgets(),
@@ -123,8 +123,15 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
     fs.requestPermissions(PermissionGroup.storage).then((st) {
       fs.localFile.then((File file) {
         if (file != null) {
+          var now = DateTime.now();
           setState(() {
-            image = Image.file(file);
+            image = file.existsSync() ?
+              Image.file(
+                file,
+                key: Key('${now.millisecondsSinceEpoch}')
+              )
+            :
+              Image.asset(dummyImagePath);
           });
         }
       }).catchError((error) => print('Initialization error: $error'));
@@ -139,14 +146,18 @@ class ImageCardWidgetState extends State<ImageCardWidget> {
     var now = DateTime.now();
     setState(() {
       isLoading = true;
+      isEditing = false;
     });
     fs.fetch(preferences.url).then((File file) {
       imageCache.clear();
       setState(() {
-        image = Image.file(
+        image = file.existsSync() ?
+          Image.file(
             file,
             key: Key('${now.millisecondsSinceEpoch}')
-        );
+          )
+        :
+          Image.asset(dummyImagePath);
         preferences.lastUpdated = now;
         isLoading = false;
       });

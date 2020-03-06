@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-const prefsIdsKey = 'allPrefs';
+const prefsIdsKey = 'allImages';
 
 class Preferences {
   String prefix;
@@ -15,7 +15,15 @@ class Preferences {
 
   static Future<List<String>> fetchIds() async {
     final prefs = await SharedPreferences.getInstance();
-    return List.from((prefs.getString(prefsIdsKey) ?? '').split(','));
+    List<String> a = List.from((prefs.getString(prefsIdsKey) ?? '').split(','));
+    print('Getting all images ids: $a');
+    return a;
+  }
+
+  static Future<void> saveIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(prefsIdsKey, ids.join(','));
+    print('Setting all images ids: $ids');
   }
 
   Future<Preferences> fetch() async {

@@ -81,6 +81,9 @@ class FileSaver {
   // Reads data from the file
   Future<List<int>> read() async {
     final file = await localFile;
+    if (!file.existsSync()) {
+      throw 'File does not exist!';
+    }
     if (await this.hasStoragePermissions(PermissionGroup.storage)) {
       Uint8List contents = await file.readAsBytes();
       return contents.toList();
