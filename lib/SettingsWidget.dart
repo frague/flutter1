@@ -13,7 +13,6 @@ class SettingsWidget extends StatefulWidget {
 
 class SettingsWidgetState extends State<SettingsWidget> {
   var isLoading = false;
-  List<ImageCardWidget> imagesWidgets = [];
   List<String> imagesIds = [];
   final StreamController refreshBus = StreamController.broadcast();
 
@@ -72,26 +71,18 @@ class SettingsWidgetState extends State<SettingsWidget> {
 
   void refreshImages() {
     print('Fetching all images');
-    imagesWidgets.forEach((ImageCardWidget widget) {
-      print('Fetch ${widget.preferencesKey}');
-      refreshBus.sink.add(true);
-    });
+    refreshBus.sink.add(true);
   }
 
   void pushImage() {
     final String name = Utils.createRandomString(10);
-    final widget = ImageCardWidget(
-      preferencesKey: name,
-      refreshBus: refreshBus,
-    );
 
     setState(() {
       imagesIds.add(name);
     });
 
-    imagesWidgets.add(widget);
     Preferences.saveIds(imagesIds);
-    print('Added ${widget.preferencesKey}');
+    print('Added $name');
   }
 
 }
