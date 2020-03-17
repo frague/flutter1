@@ -11,7 +11,7 @@ class FileSaver {
 
   FileSaver(String id) {
     if (id.isEmpty) {
-      throw('No file id provided');
+      throw ('No file id provided');
     }
     fileName = 'image$id';
     _assureDirectory();
@@ -51,7 +51,8 @@ class FileSaver {
 
   // Checks storage read/write permissions
   Future<bool> hasStoragePermissions(PermissionGroup area) async {
-    PermissionStatus permissions = await PermissionHandler().checkPermissionStatus(area);
+    PermissionStatus permissions =
+        await PermissionHandler().checkPermissionStatus(area);
     final result = (permissions == PermissionStatus.granted);
     print('Checking ${area.toString()} permissions: ${result.toString()}');
     return result;
@@ -59,8 +60,10 @@ class FileSaver {
 
   // Requests permissions from user
   Future<dynamic> requestPermissions(PermissionGroup area) async {
-    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([area]);
-    print('Requesting ${area.toString()} permissions from user: ${permissions.toString()}');
+    Map<PermissionGroup, PermissionStatus> permissions =
+        await PermissionHandler().requestPermissions([area]);
+    print(
+        'Requesting ${area.toString()} permissions from user: ${permissions.toString()}');
     return permissions;
   }
 
@@ -101,5 +104,4 @@ class FileSaver {
     var bytes = await consolidateHttpClientResponseBytes(response);
     return await write(bytes);
   }
-
 }

@@ -13,6 +13,8 @@ class SettingsWidget extends StatefulWidget {
 
 class SettingsWidgetState extends State<SettingsWidget> {
   var isLoading = false;
+  var reorderingKey;
+
   List<String> imagesIds = [];
   final StreamController refreshBus = StreamController.broadcast();
 
@@ -34,26 +36,32 @@ class SettingsWidgetState extends State<SettingsWidget> {
             child: Icon(Icons.plus_one),
           )
         ],
-        body: ListView(
-          children: List<ImageCardWidget>.from(
-            imagesIds
-              .where((key) => key.isNotEmpty)
-              .map((key) {
-                  print('Create widget $key');
-                  return ImageCardWidget(
-                      preferencesKey: key,
-                      refreshBus: refreshBus,
-                  );
-              })
-          ),
-        )
-    );
+        body: ReorderableListView(
+          onReorder: (int oldPosition, int newPosition) {
+            print('$oldPosition -> $newPosition, $imagesIds');
+          },
+          children: List<Widget>.from(
+              imagesIds.map((key) {
+//                return SizedBox(
+//                  key: ValueKey(key),
+//                  height: 50.0,
+//                  width: 100.0,
+//                  child: Text('dddd'),
+//                );
+            return ImageCardWidget(
+              key: ValueKey(key),
+              preferencesKey: key,
+              refreshBus: refreshBus,
+              reorderingKey: reorderingKey,
+            );
+          })),
+        ));
   }
 
   @override
   initState() {
-    super.initState();
     getImagesIds();
+    super.initState();
   }
 
   @override
@@ -63,10 +71,11 @@ class SettingsWidgetState extends State<SettingsWidget> {
   }
 
   Future<void> getImagesIds() async {
-    var ids = await Preferences.fetchIds();
+    var ids = (await Preferences.fetchIds()).where((key) => key.isNotEmpty).toList();
     setState(() {
       imagesIds = ids;
     });
+    print('$imagesIds !!');
   }
 
   void refreshImages() {
@@ -84,5 +93,4 @@ class SettingsWidgetState extends State<SettingsWidget> {
     Preferences.saveIds(imagesIds);
     print('Added $name');
   }
-
 }

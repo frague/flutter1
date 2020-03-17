@@ -14,14 +14,12 @@ class WebImageApp extends StatefulWidget {
 class WebImageAppState extends State<WebImageApp> {
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
         title: 'Widget App',
         theme: ThemeData(
           primarySwatch: Colors.blueGrey,
         ),
-        home: SettingsWidget()
-    );
+        home: SettingsWidget());
   }
 
   @override
